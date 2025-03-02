@@ -341,7 +341,7 @@ function Path:Run(target)
 
 	--Visualize waypoints
 	destroyVisualWaypoints(self._visualWaypoints)
-	self._visualWaypoints = (self.Visualize and createVisualWaypoints(self._waypoints))
+	self._visualWaypoints = (createVisualWaypoints(self._waypoints))
 
 	--Create a new move connection if it doesn't exist already
 	self._moveConnection = self._humanoid and (self._moveConnection or self._humanoid.MoveToFinished:Connect(function(...)

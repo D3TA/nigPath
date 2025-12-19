@@ -2,8 +2,7 @@
 -------------------------------------------------------------------
 
 Created by: @GrayzcaIe, edited by @BottleOMana to add multithreading support to allow for 100+ continuous paths
-Reference: https://v3n0m-z.github.io/RBLX-SimplePath/
-License: MIT
+Modified: Added GetHumanoidFootPosition for accurate pathfinding
 
 ---------------------------------------------------------------------
 ]]
@@ -58,6 +57,17 @@ visualWaypoint.Shape = Enum.PartType.Ball
 local function declareError(self, errorType)
 	self._lastError = errorType
 	self._events.Error:Fire(errorType)
+end
+
+--Get humanoid foot position for accurate pathfinding
+local function getHumanoidFootPosition(model)
+	if not model or not model:FindFirstChild("HumanoidRootPart") then
+		return nil
+	end
+	local rootPos = model.HumanoidRootPart.Position
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	local hipHeight = humanoid and humanoid.HipHeight or 0
+	return rootPos - Vector3.new(0, hipHeight, 0)
 end
 
 --Create visual waypoints
@@ -291,9 +301,20 @@ function Path:Run(target)
 		self._t = os.clock()
 	end
 
+	-- Get foot position for accurate pathfinding start point
+	local startPos = getHumanoidFootPosition(self._agent) or self._agent.PrimaryPart.Position
+	
+	-- Get target position (use foot position if target is a character model)
+	local targetPos
+	if typeof(target) == "Vector3" then
+		targetPos = target
+	elseif target:IsA("BasePart") then
+		targetPos = target.Position
+	end
+
 	--Compute path
 	local pathComputed, _ = pcall(function()
-		self._path:ComputeAsync(self._agent.PrimaryPart.Position, (typeof(target) == "Vector3" and target) or target.Position)
+		self._path:ComputeAsync(startPos, targetPos)
 	end)
 
 	--Make sure path computation is successful
